@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'coding/style.css' %}">
+  </link>
+
+  <title>Projekt</title>
+</head>
+
+<body>
+  <input type="checkbox" id="theme-switch" class="theme-switch">
+
+  <div id="page">
+
+    <header id="menu_bar">
+      <div class="dropdown">
+        <button class="block menu" onclick="plikFunction()" id="plikDropbutton">Plik
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content" id="plikDropdown">
+          <button type="submit" id="file_upload" onclick="showFileUpload()">Dodaj plik</button>
+          <button type="submit" id="folder_upload" onclick="showFolderUpload()">Dodaj katalog</button>
+          <button type="submit" class="hidden" id="compile" onclick="save_file()">Zapisz</button>
+          <button type="submit" class="hidden" id="save" onclick="compile()">Kompiluj</button>
+          <button type="submit" class="hidden" id="download" onclick="download()">Pobierz plik .asm</button>
+          <button type="submit" class="hidden" id="delete_file" onclick="delete_file()">Usuń plik</button>
+          <!-- <button type="submit" class="hidden" id="delete_section" onclick="delete_section()">Usuń sekcję</button> -->
+          <!-- <button type="submit" class="hidden" id="add_section" onclick="show_add_section()">Dodaj sekcję</button> -->
+          <button type="submit" class="hidden" id="delete_folder" onclick="delete_folder()">Usuń katalog</button>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="block menu" onclick="edycjaFunction()" id="edycjaDropbutton">Edycja
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content" id="edycjaDropdown">
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="block menu" onclick="opcjeFunction()" id="opcjeDropbutton">Opcje
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content" id="opcjeDropdown">
+        </div>
+      </div>
+      <label for="theme-switch" id="switch-label" class="block menu"></label>
+      <form action="{% url 'coding:logout' %}" id="logout">
+        <button type="submit" class="block menu">Wyloguj</button>
+      </form>
+
+    </header>
+    <div id="navigation">
+      {{structure | safe}}
+    </div>
+
+    <div id="program">
+      <p class="info" id="add_section_info">Najpierw zaznacz fragment pliku</p>
+      <p class="info" id="add_section_error">Nowa sekcja musi zawierać istniejące już sekcje w całości lub zawierać się
+        w całości w już istniejącej sekcji</p>
+      <!-- <pre id="file_content" class="program_content"> Wybierz plik z listy po lewej stronie</pre> -->
+      <div id="file_content" class="program_content">Wybierz plik z listy po lewej stronie</div>
+    </div>
+
+    <div id="fragment">
+      <div id="fragment_buttons">
+        <button type="submit" id="show_asm_button" onclick="show_asm()">Rozwiń sekcje</button>
+        <button type="submit" id="hide_asm_button" onclick="hide_asm()">Zwiń sekcje</button>
+      </div>
+      <div id="fragment_content"></div>
+    </div>
+
+    <div id="tabs">
+      <button class="block tab chosen" id="standard" onclick="standardFunction()">
+        STANDARD
+      </button>
+      <button class="block tab" id="optymalizacje" onclick="optymalizacjeFunction()">
+        OPTYMALIZACJE
+      </button>
+      <button class="block tab" id="procesor" onclick="procesorFunction()">
+        PROCESOR
+      </button>
+      <button class="block tab" id="zalezne" onclick="zalezneFunction()">
+        ZALEŻNE
+      </button>
+    </div>
+    <div class="tab_window" id="standard_tab">
+      <form id="standard_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{standard_form.legend}}</legend>
+          <div>
+            {% for choice in standard_form.standard %}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+    </div>
+    <div class="tab_window" id="optymalizacje_tab">
+      <form id="optymalizacje_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{optymalizacje_form.legend}}</legend>
+          <div>
+            {% for choice in optymalizacje_form.optymalizacje%}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+    </div>
+    <div class="tab_window" id="procesor_tab">
+      <form id="procesor_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{procesor_form.legend}}</legend>
+          <div>
+            {% for choice in procesor_form.procesor%}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+    </div>
+    <div class="tab_window" id="zalezne_tab">
+      <form class="zalezne_form" id="z80_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{z80_form.legend}}</legend>
+          <div>
+            {% for choice in z80_form.z80%}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+      <form class="zalezne_form" id="stm8_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{stm8_form.legend}}</legend>
+          <div>
+            {% for choice in stm8_form.stm8%}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+      <form class="zalezne_form" id="mcs51_form" method="post">
+        <fieldset>
+          {% csrf_token %}
+          <legend>{{mcs51_form.legend}}</legend>
+          <div>
+            {% for choice in mcs51_form.mcs51%}
+            {{choice}}
+            {% endfor %}
+          </div>
+        </fieldset>
+        <button type="submit">Zatwierdź</button>
+      </form>
+      <div class="zalezne_form show" id="zalezne_info">
+        <p>Wybierz procesor, aby zobaczyć zależne od niego opcje</p>
+      </div>
+    </div>
+
+    <div id="blur">
+      <div class="add" id="fileUpload">
+        <form method="post" enctype="multipart/form-data" id="file_form">
+          {% csrf_token %}
+          <legend>
+            <h1>Dodaj plik</h1>
+          </legend><br>
+          <div>
+            {{ file_form.file_name.label_tag }}
+            {{ file_form.file_name }}
+          </div>
+          <br>
+          <div>
+            {{ file_form.file.label_tag }}
+            {{ file_form.file }}
+          </div>
+          <br>
+          <button type="submit">Dodaj</button>
+          <button type="button" onclick="showFileUpload()">Anuluj</button>
+        </form>
+      </div>
+      <div class="add" id="folderUpload">
+        <form method="post" enctype="multipart/form-data" id="folder_form">
+          {% csrf_token %}
+          <legend>
+            <h1>Dodaj katalog</h1>
+          </legend><br>
+          <div>
+            {{ folder_form.folder_name.label_tag }}
+            {{ folder_form.folder_name }}
+          </div>
+          <br>
+          <button type="submit">Dodaj</button>
+          <button type="button" onclick="showFolderUpload()">Anuluj</button>
+        </form>
+      </div>
+      <div class="add" id="sectionUpload">
+        <form method="post" enctype="multipart/form-data" id="folder_form">
+          {% csrf_token %}
+          <legend>
+            <h1 id="section_legend"></h1>
+          </legend><br>
+          <div>
+            {{ section_form.section_name.label_tag }}
+            {{ section_form.section_name }}
+          </div>
+          <div>
+            {{ section_form.section_type.label_tag }}
+            {{ section_form.section_type }}
+          </div>
+          <br>
+          <button type="submit">Dodaj</button>
+          <button type="button" onclick="showSectionUpload()">Anuluj</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.62.0/lib/codemirror.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.62.0/lib/codemirror.css">
+  <script type="text/javascript" src="{%static 'coding/script.js' %}">
+  </script>
+</body>
+
+</html>
